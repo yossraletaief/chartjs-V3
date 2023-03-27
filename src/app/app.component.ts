@@ -157,11 +157,16 @@ export class AppComponent implements AfterViewInit {
       }
 
       if (this.rangeDragZoom.max - this.rangeDragZoom.min > 1)
-        for (const k of Object.keys(Chart.instances)) {
+
+      this.chart1!.chart!.zoomScale("x", this.rangeDragZoom);
+       /*  for (const k of Object.keys(Chart.instances)) {
           const c = Chart.instances[k];
           if (c.id !== this.chart2!.chart!.id)
             c.zoomScale("x", this.rangeDragZoom);
-        }
+        } */
+      else if (this.rangeDragZoom.max - this.rangeDragZoom.min == 0)
+
+      this.chart1!.chart!.zoomScale("x", this.rangeDragZoom);
 
 
 
