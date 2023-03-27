@@ -1,4 +1,4 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, ViewChild } from '@angular/core';
 import { Chart ,ChartOptions,registerables} from 'chart.js';
 
 
@@ -9,6 +9,7 @@ import { ChartConfiguration, LineController, LineElement, PointElement, LinearSc
 
 Chart.register(LineController, LineElement, PointElement, LinearScale, Title);
 import zoomPlugin from 'chartjs-plugin-zoom';
+import { BaseChartDirective } from 'ng2-charts';
 Chart.register(zoomPlugin);
 
 @Component({
@@ -17,8 +18,11 @@ Chart.register(zoomPlugin);
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements AfterViewInit {
+
+  @ViewChild('chart1') chart1!: BaseChartDirective;
+  @ViewChild('chart2') chart2!: BaseChartDirective;
   title = 'chartjs-V3';
-  myChart: any;
+  public rangeDragZoom = { min: 0, max: 0 }
   public lineChartData: ChartConfiguration<'line'>['data'] = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
     datasets: [
@@ -27,20 +31,32 @@ export class AppComponent implements AfterViewInit {
         label: 'Series A',
         fill: true,
         tension: 0.5,
-        borderColor: 'black',
-        backgroundColor: 'rgba(255,0,0,0.3)',
+        borderColor: '#3399CC',
+        backgroundColor: '#3399CC',
+        pointBackgroundColor:"#3399CC"
       },
     ],
   };
   public lineChartOptions: ChartOptions<'line'> = {
     responsive: false,
+    scales: {
+      y: {
+        /* min: 20,
+        max: 80, */
+      },
+    },
     plugins: {
       zoom: {
+        limits: {
+          // axis limits
+          y: {min: 40, max: 55},
+        },
         zoom: {
           drag: {
-            enabled: true,
+            enabled: false,
             backgroundColor: '#3399CC8C',
           },
+          
           wheel: {
             enabled: false,
           },
@@ -54,59 +70,109 @@ export class AppComponent implements AfterViewInit {
   };
   public lineChartLegend = true;
 
-  
-  resetZoom() {
-    console.log('resetting zoom');
-    this.myChart.resetZoom();
-  }
 
-  ngAfterViewInit(): void {
-    // line Chart
-    this.myChart = new Chart('mapId', {
-      type: 'line',
-      data: {
-        labels: [
-          'January',
-          'February',
-          'March',
-          'April',
-          'May',
-          'June',
-          'July',
-        ],
-        datasets: [
-          {
-            label: 'My First Dataset',
-            data: [65, 59, 80, 81, 56, 55, 40, 65, 59, 80, 81, 56, 55, 40],
-
-            borderColor: 'rgb(75, 192, 192)',
-
-            backgroundColor: 'orange',
-          },
-        ],
+  public lineChartData2: ChartConfiguration<'line'>['data'] = {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+    datasets: [
+      {
+        data: [65, 59, 80, 81, 56, 55, 40],
+        label: 'Series A',
+        fill: false,
+        tension: 0.5,
+        borderColor: '#3399CC',
+        backgroundColor: '#3399CC',
+        pointBackgroundColor:"#3399CC"
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          zoom: {
-            zoom: {
-              drag: {
-                enabled: true,
-                backgroundColor: '#3399CC8C',
-              },
-              wheel: {
-                enabled: false,
-              },
-              pinch: {
-                enabled: true,
-              },
-              mode: 'xy',
-            },
+    ],
+  };
+  public lineChartOptions2: ChartOptions<'line'> = {
+    responsive: false,
+    scales: {
+      y: {
+        /* min: 20,
+        max: 80, */
+      },
+    },
+    plugins: {
+      zoom: {
+        limits: {
+          // axis limits
+          y: {min: 40, max: 55},
+        },
+        zoom: {
+          drag: {
+            enabled: true,
+            backgroundColor: '#3399CC8C',
           },
+          
+          wheel: {
+            enabled: false,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: 'x',
+          /* onZoom: function({ chart }) {
+            this.chart1!.chart!.options.scales.xAxes[0].ticks.min = chart.scales['x-axis-0'].min;
+            chart1.options.scales.xAxes[0].ticks.max = chart.scales['x-axis-0'].max;
+            chart1.options.scales.xAxes[0].options.animation = false;
+            chart1.update();
+        },
+        onZoomComplete: function({ chart }) {
+            chart1.options.scales.xAxes[0].ticks.min = chart.scales['x-axis-0'].min;
+            chart1.options.scales.xAxes[0].ticks.max = chart.scales['x-axis-0'].max;
+            chart1.options.scales.xAxes[0].options.animation = true;
+            chart1.update();
+        } */
         },
       },
+    },
+  };
+  
+
+
+  ngAfterViewInit(): void {
+    this.chart2!.chart!.canvas.addEventListener('pointerdown', event => {
+
+
+      let x_index = this.chart2!.chart!.scales['x'].getValueForPixel(event.offsetX);
+      console.log("x down", x_index)
+
+      this.rangeDragZoom.min = x_index || 0;
+
+
+
     });
-    this.myChart.render();
+
+    this.chart2!.chart!.canvas.addEventListener('pointerup', event => {
+      const x_index = this.chart2!.chart!.scales['x'].getValueForPixel(event.offsetX);
+      console.log("x up", x_index)
+
+      this.rangeDragZoom.max = x_index || 0;
+
+      if (this.rangeDragZoom.max - this.rangeDragZoom.min < 0) {
+        let interm = this.rangeDragZoom.max
+        this.rangeDragZoom.max = this.rangeDragZoom.min
+        this.rangeDragZoom.min = interm
+      }
+
+      if (this.rangeDragZoom.max - this.rangeDragZoom.min > 1)
+        for (const k of Object.keys(Chart.instances)) {
+          const c = Chart.instances[k];
+          if (c.id !== this.chart2!.chart!.id)
+            c.zoomScale("x", this.rangeDragZoom);
+        }
+
+
+
+    });
+    this.chart2!.chart!.canvas.addEventListener('dblclick', event => {
+
+      for (const k of Object.keys(Chart.instances)) {
+        const c = Chart.instances[k];
+        c.resetZoom();
+      }
+
+    });
   }
 }

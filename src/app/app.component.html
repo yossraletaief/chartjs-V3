@@ -1,16 +1,18 @@
-<button style="float:right" class="btn btn-primary" (click)="resetZoom()">
-  reset zoom
-</button>
-<canvas id="mapId" height="50px" width="100px"></canvas>
-
-<canvas height="50px" width="100px"></canvas>
-
 
 <div style="display: block;">
-  <canvas baseChart width="400" height="400"
+  <canvas baseChart #chart1="base-chart" width="1500" height="400"
     [type]="'line'"
     [data]="lineChartData"
     [options]="lineChartOptions"
+    [legend]="lineChartLegend">
+  </canvas>
+</div>
+
+<div style="display: block;">
+  <canvas baseChart #chart2="base-chart" width="1500" height="150"
+    [type]="'line'"
+    [data]="lineChartData2"
+    [options]="lineChartOptions2"
     [legend]="lineChartLegend">
   </canvas>
 </div>
